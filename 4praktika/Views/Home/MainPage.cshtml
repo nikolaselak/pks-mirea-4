@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Главная страница";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - _4praktika</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <h1>Добро пожаловать на главную страницу!</h1>
+
+    <form method="post" action="Account/RegistrationPage">
+        <button type="submit" name="buttonType" value="Register">Регистрация</button>
+    </form>
+
+    <form method="post" action="Account/LoginPage">
+        <button type="submit" name="buttonType" value="Login">Вход</button>
+    </form>
+
+</body>
+</html>

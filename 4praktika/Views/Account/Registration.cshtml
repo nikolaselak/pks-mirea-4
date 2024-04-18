@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Регистрация";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - _4praktika</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <h1>Регистрация пользователя</h1>
+
+    <form action="Register" method="post">
+        <div>
+            <label for="login">Логин:</label>
+            <input type="text" id="login" name="login" required />
+        </div>
+        <div>
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" required />
+        </div>
+        <div>
+            <label for="fullName">ФИО:</label>
+            <input type="text" id="fullName" name="fullName" required />
+        </div>
+        <button type="submit">Сохранить</button>
+    </form>
+</body>
+</html>

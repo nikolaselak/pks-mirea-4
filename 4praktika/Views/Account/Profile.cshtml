@@ -1,0 +1,230 @@
+﻿@{
+    ViewData["Title"] = "Профиль";
+}
+@using Microsoft.EntityFrameworkCore;
+@using _4praktika.Models
+
+@functions {
+    public string GetLoginById(int userId)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<MyDbContext>();
+        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=webapp;Username=postgres;Password=postgres");
+        using (var context = new MyDbContext(optionsBuilder.Options))
+        {
+            var user = context.Users.FirstOrDefault(u => u.Id == userId);
+            return user != null ? user.Login : null;
+        }
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - _4praktika</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <h1>Профиль пользователя @Model.FullName</h1>
+    <p>Логин: @Model.Login</p>
+
+    <form action="Profile" method="get">
+        <input type="hidden" name="login" value="@Model.Login" />
+
+        <div>
+            <label for="senderLogin">Логин отправителя:</label>
+            <input type="text" id="senderLogin" name="senderLogin" />
+        </div>
+
+        <div>
+            <label for="startDate">Дата отправки с:</label>
+            <input type="date" id="startDate" name="startDate" />
+        </div>
+
+        <div>
+            <label for="endDate">Дата отправки по:</label>
+            <input type="date" id="endDate" name="endDate" />
+        </div>
+
+        <div>
+            <label for="status">Статус сообщений:</label>
+            <select id="status" name="status">
+                <option value="">Все</option>
+                <option value="unread">Непрочитанные</option>
+            </select>
+        </div>
+
+        <button type="submit">Применить фильтр</button>
+    </form>
+
+    <h2>Сообщения</h2>
+    <table>
+        <tr>
+            <th>Тема</th>
+            <th>Дата</th>
+            <th>От кого</th>
+        </tr>
+        @foreach (var message in ViewBag.Messages)
+        {
+            <tr data-message-id="@message.Id" @if (message.Status == "new")
+            {
+                <text>style="background-color: gray;"</text>
+            }>
+                            <td><a href="#" onclick="openModal('@message.MessageText', @message.Id, '@Model.Login')">@(message.MessageSubject)</a></td>
+                <td>@message.SendDate</td>
+                <td>@GetLoginById(message.FromUserId)</td>
+            </tr>
+
+        }
+    </table>
+
+    <p id="nikola">никц</p>
+
+    <!-- форма для отправки сообщений -->
+    <form action="SendMessage" method="post" style="margin-top: 100px">
+        <input type="text" id="currentId" name="currentId" value="@(ViewBag.User.Id)" hidden="true" />
+        <div>
+            <label for="recipientLogin">Логин получателя:</label>
+            <input type="text" id="recipientLogin" name="recipientLogin" required />
+        </div>
+        <div>
+            <label for="messageSubject">Тема сообщения:</label>
+            <input type="text" id="messageSubject" name="messageSubject" required />
+        </div>
+        <div>
+            <label for="messageText">Текст сообщения:</label>
+            <textarea id="messageText" name="messageText" required></textarea>
+        </div>
+        <button type="submit">Отправить</button>
+    </form>
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert">
+            @ViewBag.ErrorMessage
+        </div>
+    }
+
+
+    <!-- Модальное окно -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalText"></p>
+        </div>
+    </div>
+
+    <script>
+        async function updateMessageStatus(messageId, login) {
+            try {
+                const response = await fetch(`/Account/UpdateMessageStatus/${login}/${messageId}`, {
+                    method: 'POST',
+                });
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Ошибка при обновлении статуса сообщения:', error);
+                throw error;
+            }
+        }
+
+        async function updateMessageAndCloseModal(messageId, login) {
+            try {
+                await updateMessageStatus(messageId, login);
+                closeModal();
+            } catch (error) {
+                console.error("Ошибка при обновлении статуса сообщения:", error);
+            }
+        }
+
+        function openModal(text, messageId, login) {
+            document.getElementById("modalText").innerText = text;
+            var modal = document.getElementById("myModal");
+            modal.style.display = "block";
+            var span = document.getElementsByClassName("close")[0];
+            span.onclick = function () {
+                closeModal();
+            }
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    closeModal();
+                }
+            }
+
+            async function closeModal() {
+                modal.style.display = "none";
+                await updateMessageAndCloseModal(messageId, login);
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+
+<style>
+    .alert {
+        text-align: center;
+        color: red;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #ddd;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    .close {
+        color: #aaaaaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+</style>
